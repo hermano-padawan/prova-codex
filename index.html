@@ -1,1 +1,296 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tabla periódica interactiva</title>
+    <style>
+      :root {
+        --bg: #0f172a;
+        --card: #1e293b;
+        --text: #e2e8f0;
+        --accent: #38bdf8;
+      }
 
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: Arial, Helvetica, sans-serif;
+        background: radial-gradient(circle at top, #1e293b, var(--bg) 50%);
+        color: var(--text);
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
+      }
+
+      .app {
+        height: 100vh;
+        display: grid;
+        grid-template-rows: auto auto 1fr auto;
+        gap: 0.5rem;
+        padding: 0.6rem;
+      }
+
+      h1 {
+        margin: 0;
+        text-align: center;
+        font-size: clamp(1rem, 2vw, 1.6rem);
+      }
+
+      .subtitle {
+        margin: 0;
+        text-align: center;
+        font-size: clamp(0.65rem, 1.1vw, 0.9rem);
+        opacity: 0.9;
+      }
+
+      .table {
+        display: grid;
+        grid-template-columns: repeat(18, minmax(0, 1fr));
+        grid-template-rows: repeat(10, minmax(0, 1fr));
+        gap: 0.22rem;
+        min-height: 0;
+      }
+
+      .element {
+        background: rgba(30, 41, 59, 0.95);
+        border: 1px solid #334155;
+        border-radius: 0.35rem;
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        padding: 0.14rem;
+        min-height: 0;
+      }
+
+      .num {
+        font-size: clamp(0.34rem, 0.56vw, 0.56rem);
+        opacity: 0.85;
+      }
+
+      .symbol,
+      .speak {
+        border: none;
+        cursor: pointer;
+        border-radius: 0.23rem;
+      }
+
+      .symbol {
+        width: 100%;
+        background: transparent;
+        color: #f8fafc;
+        font-weight: 700;
+        font-size: clamp(0.44rem, 0.86vw, 0.98rem);
+        line-height: 1;
+        padding: 0.08rem 0;
+      }
+
+      .name {
+        font-size: clamp(0.32rem, 0.5vw, 0.56rem);
+        text-align: center;
+        opacity: 0.9;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .speak {
+        justify-self: center;
+        background: #334155;
+        color: #e2e8f0;
+        font-size: clamp(0.34rem, 0.5vw, 0.56rem);
+        padding: 0.03rem 0.2rem;
+      }
+
+      .symbol:hover,
+      .symbol:focus,
+      .speak:hover,
+      .speak:focus {
+        outline: 1px solid var(--accent);
+        background: rgba(56, 189, 248, 0.16);
+      }
+
+      .footer {
+        text-align: center;
+        font-size: clamp(0.54rem, 0.84vw, 0.76rem);
+        opacity: 0.86;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="app">
+      <h1>Tabla periódica interactiva</h1>
+      <p class="subtitle">
+        Pulsa las siglas o el botón ▶ para escuchar el nombre del elemento.
+      </p>
+      <section id="tabla" class="table" aria-label="Tabla periódica"></section>
+      <div class="footer">Diseño de una sola página sin scroll para uso en clase.</div>
+    </main>
+
+    <script>
+      const elementos = [
+        { n: 1, s: "H", name: "Hidrógeno", p: 1, g: 1 },
+        { n: 2, s: "He", name: "Helio", p: 1, g: 18 },
+        { n: 3, s: "Li", name: "Litio", p: 2, g: 1 },
+        { n: 4, s: "Be", name: "Berilio", p: 2, g: 2 },
+        { n: 5, s: "B", name: "Boro", p: 2, g: 13 },
+        { n: 6, s: "C", name: "Carbono", p: 2, g: 14 },
+        { n: 7, s: "N", name: "Nitrógeno", p: 2, g: 15 },
+        { n: 8, s: "O", name: "Oxígeno", p: 2, g: 16 },
+        { n: 9, s: "F", name: "Flúor", p: 2, g: 17 },
+        { n: 10, s: "Ne", name: "Neón", p: 2, g: 18 },
+        { n: 11, s: "Na", name: "Sodio", p: 3, g: 1 },
+        { n: 12, s: "Mg", name: "Magnesio", p: 3, g: 2 },
+        { n: 13, s: "Al", name: "Aluminio", p: 3, g: 13 },
+        { n: 14, s: "Si", name: "Silicio", p: 3, g: 14 },
+        { n: 15, s: "P", name: "Fósforo", p: 3, g: 15 },
+        { n: 16, s: "S", name: "Azufre", p: 3, g: 16 },
+        { n: 17, s: "Cl", name: "Cloro", p: 3, g: 17 },
+        { n: 18, s: "Ar", name: "Argón", p: 3, g: 18 },
+        { n: 19, s: "K", name: "Potasio", p: 4, g: 1 },
+        { n: 20, s: "Ca", name: "Calcio", p: 4, g: 2 },
+        { n: 21, s: "Sc", name: "Escandio", p: 4, g: 3 },
+        { n: 22, s: "Ti", name: "Titanio", p: 4, g: 4 },
+        { n: 23, s: "V", name: "Vanadio", p: 4, g: 5 },
+        { n: 24, s: "Cr", name: "Cromo", p: 4, g: 6 },
+        { n: 25, s: "Mn", name: "Manganeso", p: 4, g: 7 },
+        { n: 26, s: "Fe", name: "Hierro", p: 4, g: 8 },
+        { n: 27, s: "Co", name: "Cobalto", p: 4, g: 9 },
+        { n: 28, s: "Ni", name: "Níquel", p: 4, g: 10 },
+        { n: 29, s: "Cu", name: "Cobre", p: 4, g: 11 },
+        { n: 30, s: "Zn", name: "Zinc", p: 4, g: 12 },
+        { n: 31, s: "Ga", name: "Galio", p: 4, g: 13 },
+        { n: 32, s: "Ge", name: "Germanio", p: 4, g: 14 },
+        { n: 33, s: "As", name: "Arsénico", p: 4, g: 15 },
+        { n: 34, s: "Se", name: "Selenio", p: 4, g: 16 },
+        { n: 35, s: "Br", name: "Bromo", p: 4, g: 17 },
+        { n: 36, s: "Kr", name: "Kriptón", p: 4, g: 18 },
+        { n: 37, s: "Rb", name: "Rubidio", p: 5, g: 1 },
+        { n: 38, s: "Sr", name: "Estroncio", p: 5, g: 2 },
+        { n: 39, s: "Y", name: "Itrio", p: 5, g: 3 },
+        { n: 40, s: "Zr", name: "Circonio", p: 5, g: 4 },
+        { n: 41, s: "Nb", name: "Niobio", p: 5, g: 5 },
+        { n: 42, s: "Mo", name: "Molibdeno", p: 5, g: 6 },
+        { n: 43, s: "Tc", name: "Tecnecio", p: 5, g: 7 },
+        { n: 44, s: "Ru", name: "Rutenio", p: 5, g: 8 },
+        { n: 45, s: "Rh", name: "Rodio", p: 5, g: 9 },
+        { n: 46, s: "Pd", name: "Paladio", p: 5, g: 10 },
+        { n: 47, s: "Ag", name: "Plata", p: 5, g: 11 },
+        { n: 48, s: "Cd", name: "Cadmio", p: 5, g: 12 },
+        { n: 49, s: "In", name: "Indio", p: 5, g: 13 },
+        { n: 50, s: "Sn", name: "Estaño", p: 5, g: 14 },
+        { n: 51, s: "Sb", name: "Antimonio", p: 5, g: 15 },
+        { n: 52, s: "Te", name: "Telurio", p: 5, g: 16 },
+        { n: 53, s: "I", name: "Yodo", p: 5, g: 17 },
+        { n: 54, s: "Xe", name: "Xenón", p: 5, g: 18 },
+        { n: 55, s: "Cs", name: "Cesio", p: 6, g: 1 },
+        { n: 56, s: "Ba", name: "Bario", p: 6, g: 2 },
+        { n: 57, s: "La", name: "Lantano", p: 8, g: 4 },
+        { n: 58, s: "Ce", name: "Cerio", p: 8, g: 5 },
+        { n: 59, s: "Pr", name: "Praseodimio", p: 8, g: 6 },
+        { n: 60, s: "Nd", name: "Neodimio", p: 8, g: 7 },
+        { n: 61, s: "Pm", name: "Prometio", p: 8, g: 8 },
+        { n: 62, s: "Sm", name: "Samario", p: 8, g: 9 },
+        { n: 63, s: "Eu", name: "Europio", p: 8, g: 10 },
+        { n: 64, s: "Gd", name: "Gadolinio", p: 8, g: 11 },
+        { n: 65, s: "Tb", name: "Terbio", p: 8, g: 12 },
+        { n: 66, s: "Dy", name: "Disprosio", p: 8, g: 13 },
+        { n: 67, s: "Ho", name: "Holmio", p: 8, g: 14 },
+        { n: 68, s: "Er", name: "Erbio", p: 8, g: 15 },
+        { n: 69, s: "Tm", name: "Tulio", p: 8, g: 16 },
+        { n: 70, s: "Yb", name: "Iterbio", p: 8, g: 17 },
+        { n: 71, s: "Lu", name: "Lutecio", p: 8, g: 18 },
+        { n: 72, s: "Hf", name: "Hafnio", p: 6, g: 4 },
+        { n: 73, s: "Ta", name: "Tántalo", p: 6, g: 5 },
+        { n: 74, s: "W", name: "Wolframio", p: 6, g: 6 },
+        { n: 75, s: "Re", name: "Renio", p: 6, g: 7 },
+        { n: 76, s: "Os", name: "Osmio", p: 6, g: 8 },
+        { n: 77, s: "Ir", name: "Iridio", p: 6, g: 9 },
+        { n: 78, s: "Pt", name: "Platino", p: 6, g: 10 },
+        { n: 79, s: "Au", name: "Oro", p: 6, g: 11 },
+        { n: 80, s: "Hg", name: "Mercurio", p: 6, g: 12 },
+        { n: 81, s: "Tl", name: "Talio", p: 6, g: 13 },
+        { n: 82, s: "Pb", name: "Plomo", p: 6, g: 14 },
+        { n: 83, s: "Bi", name: "Bismuto", p: 6, g: 15 },
+        { n: 84, s: "Po", name: "Polonio", p: 6, g: 16 },
+        { n: 85, s: "At", name: "Astato", p: 6, g: 17 },
+        { n: 86, s: "Rn", name: "Radón", p: 6, g: 18 },
+        { n: 87, s: "Fr", name: "Francio", p: 7, g: 1 },
+        { n: 88, s: "Ra", name: "Radio", p: 7, g: 2 },
+        { n: 89, s: "Ac", name: "Actinio", p: 9, g: 4 },
+        { n: 90, s: "Th", name: "Torio", p: 9, g: 5 },
+        { n: 91, s: "Pa", name: "Protactinio", p: 9, g: 6 },
+        { n: 92, s: "U", name: "Uranio", p: 9, g: 7 },
+        { n: 93, s: "Np", name: "Neptunio", p: 9, g: 8 },
+        { n: 94, s: "Pu", name: "Plutonio", p: 9, g: 9 },
+        { n: 95, s: "Am", name: "Americio", p: 9, g: 10 },
+        { n: 96, s: "Cm", name: "Curio", p: 9, g: 11 },
+        { n: 97, s: "Bk", name: "Berkelio", p: 9, g: 12 },
+        { n: 98, s: "Cf", name: "Californio", p: 9, g: 13 },
+        { n: 99, s: "Es", name: "Einsteinio", p: 9, g: 14 },
+        { n: 100, s: "Fm", name: "Fermio", p: 9, g: 15 },
+        { n: 101, s: "Md", name: "Mendelevio", p: 9, g: 16 },
+        { n: 102, s: "No", name: "Nobelio", p: 9, g: 17 },
+        { n: 103, s: "Lr", name: "Lawrencio", p: 9, g: 18 },
+        { n: 104, s: "Rf", name: "Rutherfordio", p: 7, g: 4 },
+        { n: 105, s: "Db", name: "Dubnio", p: 7, g: 5 },
+        { n: 106, s: "Sg", name: "Seaborgio", p: 7, g: 6 },
+        { n: 107, s: "Bh", name: "Bohrio", p: 7, g: 7 },
+        { n: 108, s: "Hs", name: "Hassio", p: 7, g: 8 },
+        { n: 109, s: "Mt", name: "Meitnerio", p: 7, g: 9 },
+        { n: 110, s: "Ds", name: "Darmstadtio", p: 7, g: 10 },
+        { n: 111, s: "Rg", name: "Roentgenio", p: 7, g: 11 },
+        { n: 112, s: "Cn", name: "Copernicio", p: 7, g: 12 },
+        { n: 113, s: "Nh", name: "Nihonio", p: 7, g: 13 },
+        { n: 114, s: "Fl", name: "Flerovio", p: 7, g: 14 },
+        { n: 115, s: "Mc", name: "Moscovio", p: 7, g: 15 },
+        { n: 116, s: "Lv", name: "Livermorio", p: 7, g: 16 },
+        { n: 117, s: "Ts", name: "Teneso", p: 7, g: 17 },
+        { n: 118, s: "Og", name: "Oganesón", p: 7, g: 18 }
+      ];
+
+      const tabla = document.getElementById("tabla");
+
+      function reproducirElemento(nombre, simbolo) {
+        if (!window.speechSynthesis) {
+          alert("Tu navegador no soporta síntesis de voz.");
+          return;
+        }
+
+        window.speechSynthesis.cancel();
+        const voz = new SpeechSynthesisUtterance(`${simbolo}, ${nombre}`);
+        voz.lang = "es-ES";
+        voz.rate = 0.92;
+        voz.pitch = 1;
+        window.speechSynthesis.speak(voz);
+      }
+
+      function crearElemento(el) {
+        const card = document.createElement("article");
+        card.className = "element";
+        card.style.gridColumn = el.g;
+        card.style.gridRow = el.p;
+
+        card.innerHTML = `
+          <span class="num">${el.n}</span>
+          <button class="symbol" type="button" aria-label="Escuchar ${el.name}">${el.s}</button>
+          <div class="name">${el.name}</div>
+          <button class="speak" type="button" aria-label="Reproducir ${el.name}">▶</button>
+        `;
+
+        const symbolBtn = card.querySelector(".symbol");
+        const playBtn = card.querySelector(".speak");
+        const action = () => reproducirElemento(el.name, el.s);
+
+        symbolBtn.addEventListener("click", action);
+        playBtn.addEventListener("click", action);
+
+        return card;
+      }
+
+      elementos.forEach((el) => tabla.appendChild(crearElemento(el)));
+    </script>
+  </body>
+</html>
